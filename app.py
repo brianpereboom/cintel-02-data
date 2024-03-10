@@ -1,8 +1,8 @@
 import plotly.express as px
 from shiny.express import input, ui
 from shinywidgets import render_plotly
-import palmerpenguins # This package provides the Palmer Penguins dataset
 
+import palmerpenguins # This package provides the Palmer Penguins dataset
 penguins_df = palmerpenguins.load_penguins()
 
 ui.page_opts(title="Brian's Penguin Data", fillable=True)
