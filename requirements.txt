@@ -1,3 +1,6 @@
 pandas
 plotly
+seaborn
+altair
 palmerpenguins
+vega_datasets
