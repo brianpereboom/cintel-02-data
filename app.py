@@ -53,40 +53,56 @@ with ui.card(full_screen=True):
     
     @render_altair
     def altair_ridgeline():
-        source = data.seattle_weather.url
-        step = 20
-        overlap = 0.1
+
+        attribute = input.selected_attribute.get().split('_')
+        for w, word in enumerate(attribute[:-1]):
+            attribute[w] = word.capitalize()
+        attribute[-1] = '(' + attribute[-1] + ')'
+        attribute = ' '.join(attribute)
+
+        penguins_data = {}
+        for island in penguins_df['island'].unique():
+            penguins_data[island] = penguins_df[penguins_df['island'] == island][input.selected_attribute.get()]
+        penguins_data = pd.DataFrame(penguins_data)
+
+        height = 25
+        step = 1000
         
         return (
-            alt.Chart(source, height=step).transform_timeunit(
-                Month='month(date)'
-            ).transform_joinaggregate(
-                mean_temp='mean(temp_max)', groupby=['Month']
-            ).transform_bin(
-                ['bin_max', 'bin_min'], 'temp_max'
-            ).transform_aggregate(
-                value='count()', groupby=['Month', 'mean_temp', 'bin_min', 'bin_max']
+            alt.Chart(penguins_data).transform_fold( 
+                list(penguins_data.keys()), 
+                as_=['Columns', 'Values'] 
             ).mark_area(
                 interpolate='monotone',
-                fillOpacity=0.8,
+                fillOpacity=0.25,
                 stroke='lightgray',
-                strokeWidth=0.5
-            ).encode(
-                alt.X('bin_min:Q')
-                    .title('Maximum Daily Temperature (C)')
-                    .axis(None),
-                alt.Y('value:Q')
-                    .axis(None)
-                    .scale(
-                        range=[step, 0]
-                    ),
-                alt.Fill('mean_temp:Q')
-                    .scale(domain=[30, 5], scheme='redyellowblue')
-                    .legend(None),
+                strokeWidth=0.1
+            ).encode( 
+                alt.X(
+                    'Values:Q',
+                    bin=True,
+                    title = attribute,
+                    scale=alt.Scale(clamp=True)
+                ),
+                alt.Y(
+                    'count()',
+                    stack=None,
+                    scale=alt.Scale(range=[height, -step]),
+                    axis=None
+                ),
+                alt.Color('Columns:N'),
                 alt.Row(
-                    'Month:T',
+                    "Columns:N",
                     title=None,
-                    header=alt.Header(labelAngle=0, labelAlign='left', format='%B')
+                    header=alt.Header(labelAngle=0, labelAlign="left")
                 )
+            ).properties(
+                bounds="flush",
+                height=height,
+                width=600
+            ).configure_facet(
+                spacing=0
+            ).configure_view(
+                stroke=None
             )
         )
